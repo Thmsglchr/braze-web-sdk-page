@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Braze Web SDK Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: Arial, sans-serif;
+        --brand: #741dc5;
+        --brand-hover: #6620a8;
+        --brand-soft: #f2e7fb;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: #f4f4f5;
+        color: #18181b;
+      }
+
+      .page {
+        width: min(92vw, 420px);
+      }
+
+      main {
+        padding: 32px;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 20px 60px rgba(116, 29, 197, 0.12);
+      }
+
+      .brand-mark {
+        display: block;
+        width: 112px;
+        height: auto;
+        margin: 18px auto 0;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.5rem;
+      }
+
+      p {
+        margin: 0 0 24px;
+        line-height: 1.5;
+        color: #52525b;
+      }
+
+      form {
+        display: grid;
+        gap: 16px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-size: 0.95rem;
+        font-weight: 600;
+      }
+
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 12px 14px;
+        border: 1px solid #d4d4d8;
+        border-radius: 10px;
+        font: inherit;
+      }
+
+      input:focus {
+        outline: 2px solid rgba(116, 29, 197, 0.18);
+        outline-offset: 2px;
+        border-color: var(--brand);
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 14px 16px;
+        font: inherit;
+        font-weight: 700;
+        color: #ffffff;
+        background: var(--brand);
+        cursor: pointer;
+      }
+
+      button:hover {
+        background: var(--brand-hover);
+      }
+
+      button[data-variant="secondary"] {
+        color: #18181b;
+        background: var(--brand-soft);
+      }
+
+      button[data-variant="secondary"]:hover {
+        background: #ead7fb;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <main>
+        <h1>Braze Web SDK Demo</h1>
+        <p>Enter the Braze user configuration to launch a blank viewer page.</p>
+
+        <form id="braze-config-form">
+          <label for="external-id">
+            Braze User ID
+            <input id="external-id" name="externalId" type="text" required autocomplete="off" />
+          </label>
+
+          <label for="sdk-endpoint">
+            Braze SDK Endpoint
+            <input
+              id="sdk-endpoint"
+              name="sdkEndpoint"
+              type="text"
+              placeholder="sdk.iad-01.braze.com"
+              required
+              autocomplete="off"
+            />
+          </label>
+
+          <label for="sdk-key">
+            Braze Web SDK Key
+            <input id="sdk-key" name="sdkKey" type="text" required autocomplete="off" />
+          </label>
+
+          <div class="actions">
+            <button type="submit">Validate</button>
+            <button id="reset-config" type="button" data-variant="secondary">Start over</button>
+          </div>
+        </form>
+      </main>
+
+      <img class="brand-mark" src="/public/powered-by-braze.png" alt="Powered by Braze" />
+    </div>
+
+    <script src="/src/config.js"></script>
+    <script src="/src/index.js"></script>
+  </body>
+</html>

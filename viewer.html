@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Braze Viewer</title>
+    <style>
+      :root {
+        --brand: #741dc5;
+        --brand-hover: #6620a8;
+      }
+
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+        background: #ffffff;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 50%;
+        width: min(52vw, 520px);
+        aspect-ratio: 1.9 / 1;
+        transform: translate(-50%, -50%);
+        background: url("/public/powered-by-braze.png") center / contain no-repeat;
+        opacity: 0.12;
+        pointer-events: none;
+      }
+
+      #demo-banner {
+        position: relative;
+        z-index: 1;
+        display: none;
+      }
+
+      #close-session {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        z-index: 1000;
+        border: 0;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: 600 14px/1 Arial, sans-serif;
+        color: #ffffff;
+        background: rgba(116, 29, 197, 0.92);
+        cursor: pointer;
+      }
+
+      #close-session:hover {
+        background: var(--brand-hover);
+      }
+    </style>
+  </head>
+  <body>
+    <button id="close-session" type="button">Close SDK session</button>
+    <div id="demo-banner" aria-hidden="true"></div>
+
+    <script src="https://js.appboycdn.com/web-sdk/6.5/braze.min.js"></script>
+    <script src="/src/config.js"></script>
+    <script src="/src/viewer.js"></script>
+  </body>
+</html>

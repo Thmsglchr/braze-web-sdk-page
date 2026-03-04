@@ -13,6 +13,7 @@
   }
 
   const config = configApi.loadConfig();
+  const viewerStartedAt = Date.now();
 
   if (!config) {
     console.error("[Braze Demo] Missing stored Braze configuration. Redirecting to form.");
@@ -22,6 +23,16 @@
 
   const bannerContainer = global.document.getElementById(configApi.BANNER_PLACEMENT_ID);
   const closeSessionButton = global.document.getElementById("close-session");
+  let latestContentCardCount = 0;
+  let contentCardsRetryTimeoutId = null;
+
+  function elapsedMs() {
+    return Date.now() - viewerStartedAt;
+  }
+
+  function logWithTimestamp(message, payload) {
+    console.log(message, Object.assign({ elapsedMs: elapsedMs() }, payload || {}));
+  }
 
   function clearBrazeUi() {
     if (bannerContainer) {
@@ -50,7 +61,7 @@
     clearBrazeUi();
     tryCall("removeAllSubscriptions");
 
-    const resetMethods = ["wipeData", "destroy"];
+    const resetMethods = ["wipeData"];
     let resetApplied = false;
 
     resetMethods.forEach(function applyResetMethod(methodName) {
@@ -64,6 +75,10 @@
 
   function leaveViewerAndReset() {
     console.log("[Braze Demo] Leaving viewer and clearing stored session.");
+    if (contentCardsRetryTimeoutId) {
+      global.clearTimeout(contentCardsRetryTimeoutId);
+      contentCardsRetryTimeoutId = null;
+    }
     resetExistingBrazeState();
     configApi.clearConfig();
     configApi.markResetRequested();
@@ -85,8 +100,8 @@
   }
 
   if (configApi.consumeResetRequested()) {
-    console.log("[Braze Demo] Reset requested before SDK initialization.");
-    resetExistingBrazeState();
+    logWithTimestamp("[Braze Demo] Reset requested before SDK initialization.");
+    clearBrazeUi();
   }
 
   global.resetBrazeDemoSession = leaveViewerAndReset;
@@ -99,26 +114,35 @@
     }
   });
 
-  console.log("[Braze Demo] Initializing Braze Web SDK.", {
+  logWithTimestamp("[Braze Demo] Initializing Braze Web SDK.", {
     externalId: config.externalId,
     sdkEndpoint: config.sdkEndpoint,
     bannerPlacementId: configApi.BANNER_PLACEMENT_ID,
   });
 
   braze.initialize(config.sdkKey, {
+    allowUserSuppliedJavascript: true,
     baseUrl: config.sdkEndpoint,
     enableLogging: true,
+    minimumIntervalBetweenTriggerActionsInSeconds: 0,
     serviceWorkerLocation: "/service-worker.js",
+    sessionTimeoutInSeconds: 1,
   });
+
+  braze.automaticallyShowInAppMessages();
 
   braze.subscribeToInAppMessage(function handleInAppMessage(message) {
-    console.log("[Braze Demo] In-app message received.", message);
-    braze.showInAppMessage(message);
+    logWithTimestamp("[Braze Demo] In-app message received.", { message });
   });
 
-  braze.subscribeToContentCardsUpdates(function handleContentCardsUpdate(update) {
-    const cards = update && Array.isArray(update.cards) ? update.cards : [];
-    console.log("[Braze Demo] Content Cards update received.", { cardCount: cards.length, update });
+  braze.subscribeToContentCardsUpdates(function handleContentCardsUpdate(contentCards) {
+    const cards = contentCards && Array.isArray(contentCards.cards) ? contentCards.cards : [];
+    latestContentCardCount = cards.length;
+    logWithTimestamp("[Braze Demo] Content Cards update received.", {
+      cardCount: cards.length,
+      contentCards,
+      lastUpdated: contentCards ? contentCards.lastUpdated : null,
+    });
   });
 
   braze.subscribeToBannersUpdates(function handleBannerUpdate(banners) {
@@ -134,9 +158,51 @@
 
   braze.changeUser(config.externalId);
   braze.openSession();
-  braze.requestContentCardsRefresh();
+
+  if (typeof braze.getCachedContentCards === "function") {
+    const cachedContentCards = braze.getCachedContentCards();
+    const cachedCards = cachedContentCards && Array.isArray(cachedContentCards.cards) ? cachedContentCards.cards : [];
+    latestContentCardCount = cachedCards.length;
+    logWithTimestamp("[Braze Demo] Cached Content Cards snapshot.", {
+      cardCount: cachedCards.length,
+      cachedContentCards,
+      lastUpdated: cachedContentCards ? cachedContentCards.lastUpdated : null,
+    });
+  }
+
+  braze.requestContentCardsRefresh(
+    function handleContentCardsRefreshSuccess() {
+      logWithTimestamp("[Braze Demo] Content Cards refresh succeeded.", {
+        cardCount: latestContentCardCount,
+      });
+    },
+    function handleContentCardsRefreshError(error) {
+      logWithTimestamp("[Braze Demo] Content Cards refresh failed.", { error });
+    }
+  );
   braze.showContentCards();
   braze.requestBannersRefresh([configApi.BANNER_PLACEMENT_ID]);
 
-  console.log("[Braze Demo] Braze session opened.");
+  contentCardsRetryTimeoutId = global.setTimeout(function retryContentCardsRefresh() {
+    if (latestContentCardCount > 0) {
+      logWithTimestamp("[Braze Demo] Skipping delayed Content Cards retry because cards are already available.", {
+        cardCount: latestContentCardCount,
+      });
+      return;
+    }
+
+    logWithTimestamp("[Braze Demo] Retrying Content Cards refresh after initial empty result.");
+    braze.requestContentCardsRefresh(
+      function handleRetrySuccess() {
+        logWithTimestamp("[Braze Demo] Delayed Content Cards refresh succeeded.", {
+          cardCount: latestContentCardCount,
+        });
+      },
+      function handleRetryError(error) {
+        logWithTimestamp("[Braze Demo] Delayed Content Cards refresh failed.", { error });
+      }
+    );
+  }, 3000);
+
+  logWithTimestamp("[Braze Demo] Braze session opened.");
 })(window);

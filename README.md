@@ -15,6 +15,9 @@ A webpage that collects a Braze User ID, a Braze SDK Endpoint and a Braze Web SD
   - in-app messages via the native Braze display behavior
   - Content Cards via Braze's default UI
   - Banners for the fixed placement ID `demo-banner`
+- Banner rendering is enabled with Braze's `allowUserSuppliedJavascript` initialization option, which this test page turns on intentionally so Braze banner creatives can display.
+- For easier QA of `session_start` campaigns, the viewer uses `sessionTimeoutInSeconds: 1` and `minimumIntervalBetweenTriggerActionsInSeconds: 0` so a restarted test session can trigger again almost immediately.
+- For Content Cards QA, the viewer logs the cached card state immediately, performs an explicit refresh, and retries once after 3 seconds if the first refresh still returns no cards.
 - The page contains a hidden `div#demo-banner`; it stays hidden when no banner is returned.
 - All diagnostic output is written to the browser console.
 - Before each new viewer session, the page attempts to clear previous Braze browser state using SDK reset methods when they are exposed by the loaded SDK build.

@@ -29,7 +29,6 @@
 
     try {
       const savedConfig = configApi.saveConfig(submittedConfig);
-      configApi.markResetRequested();
       console.log("[Braze Demo] Saved Braze configuration.", {
         externalId: savedConfig.externalId,
         sdkEndpoint: savedConfig.sdkEndpoint,
